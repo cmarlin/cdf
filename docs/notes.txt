@@ -1,0 +1,20 @@
+
+Pb du zig-zag:
+
+--         :         ----
+  \        :       /
+...\.......*....../......
+    \      :     /
+      ----------
+           :
+
+Pour le point *, la distance (en considérant uniquement les axes... jusqu'à -/) peut être différente,
+alors que la valeur de * doit être définie
+
+-       -
+A \ B / C
+    -    
+    D
+
+Ainsi AB peut avoir une distance proche de B (donc proche de la limite par rapport à A), mais en même temps
+BC peut avoir une distance proche de C (donc plus 'proche que B) 

@@ -1,0 +1,1 @@
+convert -size 128x128 xc:none +antialias -fill white  -draw "circle 64,64 64,8" drawn_jaggies.png
