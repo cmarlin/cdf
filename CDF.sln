@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Windows Desktop
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VectorTexture", "VectorTexture\VectorTexture.vcxproj", "{FF1D8E1A-B5B2-4F82-A7C9-E66B67BEC5DB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CDFLibrary", "CDFLibrary\CDFLibrary.vcxproj", "{FF1D8E1A-B5B2-4F82-A7C9-E66B67BEC5DB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CDFEncoder", "CDFEncoder\CDFEncoder.csproj", "{C352B9BA-91B8-4169-B6EA-C921F9E6AFAC}"
 EndProject

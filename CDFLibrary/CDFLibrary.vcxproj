@@ -13,7 +13,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FF1D8E1A-B5B2-4F82-A7C9-E66B67BEC5DB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>VectorTexture</RootNamespace>
+    <RootNamespace>CDF</RootNamespace>
+    <ProjectName>CDFLibrary</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -82,7 +83,7 @@
     <ClInclude Include="FillArea.h" />
     <ClInclude Include="FillHoles.h" />
     <ClInclude Include="Shrink2DBuffer.h" />
-    <ClInclude Include="SplitColorToLayer.h" />
+    <ClInclude Include="SplitColorToLayer2.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Test.h" />
@@ -93,7 +94,7 @@
     <ClCompile Include="FillArea.cpp" />
     <ClCompile Include="FillHoles.cpp" />
     <ClCompile Include="shrink2DBuffer.cpp" />
-    <ClCompile Include="SplitColorToLayer.cpp" />
+    <ClCompile Include="SplitColorToLayer2.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
