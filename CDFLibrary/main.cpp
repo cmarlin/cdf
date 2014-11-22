@@ -17,7 +17,7 @@
 #include "FillArea.h"
 #include "DumpBuffer.h"
 #include "FillHoles.h"
-#include "SplitColorToLayer2.h"
+#include "SplitColorToLayer.h"
 
 
 /**
