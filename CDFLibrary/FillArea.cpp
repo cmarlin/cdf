@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "FillArea.h"
+#include "FillArea.hpp"
 #include <assert.h>
 
 

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "Shrink2DBuffer.h"
+#include "Shrink2DBuffer.hpp"
 
 
 bool shrink2DBuffer4UB(

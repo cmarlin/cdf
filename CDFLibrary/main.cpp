@@ -13,11 +13,10 @@
 #include <iterator>
 //#include "freeimage.h"
 #include "tga.h"
-#include "Shrink2DBuffer.h"
-#include "FillArea.h"
-#include "DumpBuffer.h"
-#include "FillHoles.h"
-#include "SplitColorToLayer.h"
+#include "Shrink2DBuffer.hpp"
+#include "FillArea.hpp"
+#include "DumpBuffer.hpp"
+#include "SplitColorToLayer.hpp"
 
 
 /**

@@ -2,8 +2,8 @@
 
 #include <stdlib.h>
 
-#include "Test.h"
-#include "DumpBuffer.h"
+#include "Test.hpp"
+#include "DumpBuffer.hpp"
 
 
 void testLinear()

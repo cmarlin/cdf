@@ -1,5 +1,5 @@
-#ifndef FILL_AREA_H
-#define FILL_AREA_H
+#ifndef FILL_AREA_HPP
+#define FILL_AREA_HPP
 
 #include <stdint.h>
 

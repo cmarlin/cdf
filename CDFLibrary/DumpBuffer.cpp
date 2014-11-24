@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "DumpBuffer.h"
+#include "DumpBuffer.hpp"
 #include "tga.h"
 
 void dumpBufferUB(const char* filename, const uint8_t* _data, const int _width, const int _height)

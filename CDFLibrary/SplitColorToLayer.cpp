@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#include "SplitColorToLayer.h"
+#include "SplitColorToLayer.hpp"
 
 
 void diffuseDistances(signed _width, signed _height, 
