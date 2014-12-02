@@ -71,6 +71,7 @@ void dumpBuffer4UB(const char* filename, const uint8_t* _data, const int _width,
 
 void dumpBufferUI(const char* filename, const unsigned int * _data, const int _width, const int _height)
 {
+	srand(0);
 	uint8_t* outData = new uint8_t[_width * _height * sizeof(uint32_t)];
 	for(int j=0; j<_height; ++j)
 	{
@@ -78,7 +79,7 @@ void dumpBufferUI(const char* filename, const unsigned int * _data, const int _w
 		{
 			int offset = (j*_width)+i;
 			outData[offset*sizeof(uint32_t) + 0] = (uint8_t)_data[offset]; //B
-			outData[offset*sizeof(uint32_t) + 1] = (uint8_t)_data[offset]; //G
+			outData[offset*sizeof(uint32_t) + 1] = (uint8_t)(srand(_data[offset]),rand()&0xff); //G
 			outData[offset*sizeof(uint32_t) + 2] = (uint8_t)_data[offset]; //R
 			outData[offset*sizeof(uint32_t) + 3] = 0xff; // A
 		}

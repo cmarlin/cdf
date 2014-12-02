@@ -136,7 +136,7 @@ unsigned tagCluster(unsigned int* _cluster, const uint8_t* _inC8, const int _wid
 				sgmt.dy = 1;
 				tagArea(sgmt, param);
 				sgmt.y = j+1;
-				sgmt.y = -1;
+				sgmt.dy = -1;
 				tagArea(sgmt, param);
 				clusterName++;
 				//return clusterName;
