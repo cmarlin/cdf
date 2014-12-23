@@ -5,45 +5,45 @@
 #include "SplitColorToLayer.hpp"
 
 
-void diffuseDistances(signed _width, signed _height, 
+void diffuseDistances(unsigned _width, unsigned _height, 
 					  std::vector<signed>& nearestDistance, std::vector<unsigned>& nearestPixel)
 {
 	// first pass
-	for(signed j=0; j<_height; ++j)
+	for(unsigned j=0; j<_height; ++j)
 	{
-		for(signed i=0; i<_width; i++)
+		for(unsigned i=0; i<_width; i++)
 		{
-			signed offset = j*_width + i;
-			signed distTmp, offsetTmp;
-			if((j-1)>=0 && (i-1)>=0
+			unsigned offset = j*_width + i, offsetTmp;
+			signed distTmp;
+			if(j>0 && i>0
 				&& (distTmp=nearestDistance[offsetTmp = ((j-1)*_width+(i-1))]+4)<nearestDistance[offset])
 			{nearestDistance[offset] = distTmp; nearestPixel[offset] = nearestPixel[offsetTmp]; }
 
-			if((j-1)>=0 && (i)>=0
+			if(j>0
 				&& (distTmp=nearestDistance[offsetTmp = ((j-1)*_width+i)]+3)<nearestDistance[offset])
 			{nearestDistance[offset] = distTmp; nearestPixel[offset] = nearestPixel[offsetTmp]; }
 			
-			if((j-1)>=0 && (i+1)<_width 
+			if(j>0 && (i+1)<_width 
 				&& (distTmp=nearestDistance[offsetTmp = ((j-1)*_width+(i+1))]+4)<nearestDistance[offset])
 			{nearestDistance[offset] = distTmp; nearestPixel[offset] = nearestPixel[offsetTmp]; }
 			
-			if((j)>=0 && (i-1)>=0 
+			if(i>0 
 				&& (distTmp=nearestDistance[offsetTmp = ((j)*_width+(i-1))]+3)<nearestDistance[offset])
 			{nearestDistance[offset] = distTmp; nearestPixel[offset] = nearestPixel[offsetTmp]; }
 		}
 	}
 	// second pass
-	for(signed j=(_height-1); j>=0; --j)
+	for(unsigned j=(_height-1); j!=UINT_MAX; --j)
 	{
-		for(signed i=(_width-1); i>=0; --i)
+		for(unsigned i=(_width-1); i!=UINT_MAX; --i)
 		{
-			signed offset = j*_width + i;
-			signed distTmp, offsetTmp;
-			if((j+1)<_height && (i-1)>=0 
+			unsigned offset = j*_width + i, offsetTmp;
+			signed distTmp;
+			if((j+1)<_height && i>0 
 				&& (distTmp=nearestDistance[offsetTmp = ((j+1)*_width+(i-1))]+4)<nearestDistance[offset])
 			{nearestDistance[offset] = distTmp; nearestPixel[offset] = nearestPixel[offsetTmp]; }
 			
-			if((j+1)<_height && (i)>=0 
+			if((j+1)<_height 
 				&& (distTmp=nearestDistance[offsetTmp = ((j+1)*_width+i)]+3)<nearestDistance[offset])
 			{nearestDistance[offset] = distTmp; nearestPixel[offset] = nearestPixel[offsetTmp]; }
 			
@@ -51,7 +51,7 @@ void diffuseDistances(signed _width, signed _height,
 				&& (distTmp=nearestDistance[offsetTmp = ((j+1)*_width+(i+1))]+4)<nearestDistance[offset])
 			{nearestDistance[offset] = distTmp; nearestPixel[offset] = nearestPixel[offsetTmp]; }
 			
-			if((j)>=0 && (i+1)<_width 
+			if((i+1)<_width 
 				&& (distTmp=nearestDistance[offsetTmp = ((j)*_width+(i+1))]+3)<nearestDistance[offset])
 			{nearestDistance[offset] = distTmp; nearestPixel[offset] = nearestPixel[offsetTmp]; }
 		}
@@ -105,30 +105,73 @@ void splitBuffer(uint8_t* _outColorsRGBA8, const unsigned _widthLR, const unsign
 	diffuseDistances(_widthHR, _heightHR, 
 		nearestDistance, nearestPixel);
 
-	signed dStep = std::min(widthFactor, heightFactor);
-	signed oStep = std::max(widthFactor, heightFactor) - dStep;
-	signed distanceMax =  4 * dStep + 3 * oStep;
+	std::vector<signed> nearestInsideDistance;
+	nearestInsideDistance.resize(_widthHR*_heightHR); // UINT_MAX may generate overflow
 
+	for(unsigned j=0; j<_heightHR; ++j)
+	{
+		for(unsigned i=0; i<_widthHR; i++)
+		{
+			unsigned offset = ((j * _widthHR) + i);
+			signed distance = nearestDistance[offset];
+			nearestInsideDistance[offset] = distance>0 ? -distance : SHRT_MAX;				 
+		}
+	}
+	std::vector<unsigned> trash;
+	trash.resize(_widthHR*_heightHR, ~0);
+	diffuseDistances(_widthHR, _heightHR, 
+		nearestInsideDistance, trash);
+	trash.resize(0);
+
+	//unsigned dStep = std::min(widthFactor, heightFactor)/2;
+	//unsigned oStep = std::max(widthFactor, heightFactor)/2 - dStep;
+	//unsigned distanceMax =  4 * dStep + 3 * oStep;
+
+	unsigned halfTileWidthFloor = (widthFactor)/2;
+	unsigned halfTileWidthCeil = (widthFactor-1)/2;
+	unsigned halfTileHeightFloor = (heightFactor)/2;
+	unsigned halfTileHeightCeil = (heightFactor-1)/2;
 	for(unsigned j=0; j<_heightLR; ++j)
 	{
 		for(unsigned i=0; i<_widthLR; ++i)
 		{
 			unsigned outOffset = j*_widthLR+i;
 
-			unsigned inOffsetHR = (j*_stride*heightFactor)+i*widthFactor;
-			//const uint8_t* localPixels = &_inColorRGBA8HR[inOffsetHR*4];
-			//const unsigned* localClusterIds = &_clusterIdHR[inOffsetHR];
+			unsigned inOffsetHRUL = (j*heightFactor+halfTileHeightFloor)*_stride+i*widthFactor+halfTileWidthFloor;
+			unsigned inOffsetHRUR = (j*heightFactor+halfTileHeightFloor)*_stride+i*widthFactor+halfTileWidthCeil;
+			unsigned inOffsetHRDL = (j*heightFactor+halfTileHeightCeil)*_stride+i*widthFactor+halfTileWidthFloor;
+			unsigned inOffsetHRDR = (j*heightFactor+halfTileHeightCeil)*_stride+i*widthFactor+halfTileWidthCeil;
 
-			unsigned distance = nearestDistance[inOffsetHR];
-			unsigned pixelOffset = nearestPixel[inOffsetHR];
+			// TODO: avg could be an error, check that
+			signed distance = (nearestDistance[inOffsetHRUL] + nearestDistance[inOffsetHRUR]
+				+ nearestDistance[inOffsetHRDL] + nearestDistance[inOffsetHRDR]);
+			if(distance <= 3*2) // threshold is mid of 0-3
+			{
+				// inside
+				distance = (nearestInsideDistance[inOffsetHRUL] + nearestInsideDistance[inOffsetHRUR]
+					+ nearestInsideDistance[inOffsetHRDL] + nearestInsideDistance[inOffsetHRDR]);
+				distance = distance/4 + 2;
+			}else{
+				// outside
+				distance = -(distance/4) + 2;
+			}
 
-			_outColorsRGBA8[outOffset*4 + 0] = _inColorRGBA8HR[pixelOffset*4+0];
-			_outColorsRGBA8[outOffset*4 + 1] = _inColorRGBA8HR[pixelOffset*4+1];
-			_outColorsRGBA8[outOffset*4 + 2] = _inColorRGBA8HR[pixelOffset*4+2];
+			// convert to byte range
+			distance += 0x80; 
+			distance = std::min(distance, 0xff);
+			distance = std::max(distance, 0x00);
 
-			distance = ((distance) * 0xff / (distanceMax)); //normalize
-			distance = distance>0xff ? 0xff : distance; // clamp
-			distance = 0xff - distance; // invert
+			unsigned pixelOffsetUL = nearestPixel[inOffsetHRUL];
+			unsigned pixelOffsetUR = nearestPixel[inOffsetHRUR];
+			unsigned pixelOffsetDL = nearestPixel[inOffsetHRDL];
+			unsigned pixelOffsetDR = nearestPixel[inOffsetHRDR];
+			_outColorsRGBA8[outOffset*4 + 0] = (_inColorRGBA8HR[pixelOffsetUL*4+0] + _inColorRGBA8HR[pixelOffsetUR*4+0]
+				+ _inColorRGBA8HR[pixelOffsetDL*4+0] + _inColorRGBA8HR[pixelOffsetDR*4+0]) / 4;
+			_outColorsRGBA8[outOffset*4 + 1] = (_inColorRGBA8HR[pixelOffsetUL*4+1] + _inColorRGBA8HR[pixelOffsetUR*4+1]
+				+ _inColorRGBA8HR[pixelOffsetDL*4+1] + _inColorRGBA8HR[pixelOffsetDR*4+1]) / 4;
+			_outColorsRGBA8[outOffset*4 + 2] = (_inColorRGBA8HR[pixelOffsetUL*4+2] + _inColorRGBA8HR[pixelOffsetUR*4+2]
+				+ _inColorRGBA8HR[pixelOffsetDL*4+2] + _inColorRGBA8HR[pixelOffsetDR*4+2]) / 4;
+
 			_outColorsRGBA8[outOffset*4 + 3] = distance;
 		}
 	}

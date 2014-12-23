@@ -53,7 +53,7 @@ inline std::map<ClusterId, VTCluster>::iterator addOrGetCluster(std::map<Cluster
 	return itCluster;
 }
 
-inline void addClusterLink(std::map<ClusterId, VTCluster>::iterator _itCluster, ClusterId _to)
+inline void addClusterLink(std::map<ClusterId, VTCluster>::iterator _itCluster, ClusterId _to, unsigned _count=1)
 {
 	// insert link to other cluster if not found
 	VTCluster& cluster = _itCluster->second;
@@ -65,7 +65,7 @@ inline void addClusterLink(std::map<ClusterId, VTCluster>::iterator _itCluster, 
 	}
 
 	VTLink& link = itLink->second;
-	link.m_count++;
+	link.m_count+=_count;
 }
 
 
@@ -123,5 +123,6 @@ inline void addClusterLink(std::map<ClusterId, VTCluster>& _clusterGraph,
 		}
 	}
 }
+
 
 #endif //VTCLUSTER_HPP

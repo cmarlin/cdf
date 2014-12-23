@@ -62,7 +62,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	char* filename = argv[1];
 	if((fin=fopen(filename, "rb"))!=NULL)
 	{
-		printf("read input file\n");
+		printf("read input file...\n");
 
 		TGA_HEADER inHeader;
 		TGA_ReadHeader(&inHeader, fin);
@@ -71,24 +71,28 @@ int _tmain(int argc, _TCHAR* argv[])
 		widthHR = inHeader.width;
 		heightHR = inHeader.height;
 		fclose(fin);
+		printf("read input file done\n");
 	}
 	else
 	{
 		return 0;
 	}
 
-	printf("save lum (c8)\n");
+	printf("save lum (c8)...\n");
 	//uint8_t* stepLumHR = new uint8_t[widthHR * heightHR];
 	std::vector<uint8_t> stepLumHR(widthHR * heightHR);
 	computePseudoLuminosity(stepLumHR.data(), inDataHR, widthHR, heightHR);
 	dumpBufferUB("out-c8.tga", stepLumHR.data(), widthHR, heightHR);
+	printf("save lum (c8) done\n");
 	
-	printf("compute ids\n");
+	printf("compute ids...\n");
 	std::vector<ClusterId> clusterIdHR(widthHR * heightHR);
 	unsigned clusterCount = tagCluster(clusterIdHR.data(), stepLumHR.data(), widthHR, heightHR);
-	printf("found %d ids\n", clusterCount);
-	printf("save ids\n");
+	printf("compute ids done\n");
+	printf("found %d distinct ids\n", clusterCount);
+	printf("save ids...\n");
 	dumpBufferUI("out-ids.tga", clusterIdHR.data(), widthHR, heightHR);
+	printf("save ids done\n");
 	
 	const unsigned shrinkFactor = 4;
 	unsigned widthLR = widthHR / shrinkFactor;
@@ -101,7 +105,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//}
 
 	{
-		printf("save out-ref\n");
+		printf("save out-ref ...\n");
 		std::vector<uint8_t> inDataLR(widthLR * heightLR * 4);
 		if(!shrink2DBuffer4UB(inDataLR.data(), widthLR, heightLR, inDataHR, widthHR, heightHR))
 		{
@@ -109,16 +113,22 @@ int _tmain(int argc, _TCHAR* argv[])
 			return 0;
 		}
 		dumpBuffer4UB("out-ref.tga", inDataLR.data(), widthLR, heightLR);
+		printf("save out-ref done\n");
 	}
 
+	printf("extract clusters...\n");
 	std::map<ClusterId, VTCluster> clusterGraph;
 	extractCluster(clusterGraph, widthLR, heightLR, clusterIdHR, widthHR, heightHR);
+	printf("extract clusters done\n");
 
 	unsigned layerCount = 3;
 	std::vector<std::set<ClusterId>> layers;
-	printf("extract layers\n");
-	extractLayers(layers, layerCount, clusterGraph);
+	printf("extract layers...\n");
+	unsigned remainErrors = extractLayers(layers, layerCount, clusterGraph);
+	printf("remains %d errors\n", remainErrors);
+	printf("extract layers done\n");
 
+	printf("split colors to buffers...\n");
 	std::vector<uint8_t*> buffers;
 	buffers.resize(layerCount);
 	for(unsigned i=0; i<layerCount; ++i)
@@ -127,12 +137,12 @@ int _tmain(int argc, _TCHAR* argv[])
 		memset(buffers[i], 0, widthLR * heightLR * 4);
 	}
 
-	printf("split buffer\n");
 	splitBuffer(buffers, layers, 
 		widthLR, heightLR,
 		clusterIdHR, inDataHR, widthHR, heightHR);
+	printf("split colors to buffers done\n");
 		
-	printf("save outputs\n");
+	printf("save %d outputs ...\n", layerCount);
 	for(unsigned i=0; i<layerCount; ++i)
 	{
 		char outfileName[_MAX_PATH];
@@ -144,6 +154,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		//sprintf(outfileName, "out-%d-filled.tga", i);
 		//dumpBuffer4UB(outfileName, buffers[i], widthLR, heightLR);
 	}
+	printf("save outputs done\n");
 
 	for(unsigned i=0; i<layerCount; ++i)
 	{
