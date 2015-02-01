@@ -1,40 +1,59 @@
-========================================================================
-    CONSOLE APPLICATION : VectorTexture Project Overview
-========================================================================
+===============================================================================
+    CDFLibrary
+===============================================================================
 
-AppWizard has created this VectorTexture application for you.
+Cascaded distance field encoding:
+Encode image to many distance fields images. A distance field is a lattice where we store distance to border in each cell.
+Using textures to store a shape this way, linear interpolation (used when texture is magnified) results in a fine look and feel.
+If we consider thershold value setting the inside and outside of cluster, once we are outside of the cluster, we can reuse lattice to store 
+a new cluster. 
+Let's consider the green-white-red italian flag: the distance field used for green storage could also be used for red storage too. So, only
+two layers could be used for perfect storage of this image.
+This approach is interesting for images composed from areas of same color: vector images or cartoon ones (svg/flash are kind of good support).
 
-This file contains a summary of what you will find in each of the files that
-make up your VectorTexture application.
+Terminology:
+* Cluster
+* Layer
+* Control point
+
+Process:
+	1°) Cluster creation (not so easy ;-)) - find coherent group of pixels (high or low res ?)
+	2°) find control points from each cluster
+	3°) Count conflicts between clusters
+	4°) Assign Clusters to Layers, minimising conflicts
 
 
-VectorTexture.vcxproj
-    This is the main project file for VC++ projects generated using an Application Wizard.
-    It contains information about the version of Visual C++ that generated the file, and
-    information about the platforms, configurations, and project features selected with the
-    Application Wizard.
-
-VectorTexture.vcxproj.filters
-    This is the filters file for VC++ projects generated using an Application Wizard. 
-    It contains information about the association between the files in your project 
-    and the filters. This association is used in the IDE to show grouping of files with
-    similar extensions under a specific node (for e.g. ".cpp" files are associated with the
-    "Source Files" filter).
-
-VectorTexture.cpp
-    This is the main application source file.
-
-/////////////////////////////////////////////////////////////////////////////
-Other standard files:
-
-StdAfx.h, StdAfx.cpp
-    These files are used to build a precompiled header (PCH) file
-    named VectorTexture.pch and a precompiled types file named StdAfx.obj.
 
 /////////////////////////////////////////////////////////////////////////////
-Other notes:
+Main objectives:
 
-AppWizard uses "TODO:" comments to indicate parts of the source code you
-should add to or customize.
+- predictive quality (stability of quality
+Utilisable en prod: fiable (testé sur de nombreuses images, jeu de test "officiel ?")
+Publication :
+- Présentation de la méthode
+- screenshots comparatifs sur la qualité, taille mémoire
+- performances sur des périphériques mobile/desktop
+- impact compression (dxt5-bcn)
+Encodage "auto":
+- Fixer la qualité, recherche des meilleurs paramètres (résolution/nombre de couches)
+- fixer la taille mémoire, recherche du meilleur compromis nombre de couches-résolution
+
+/////////////////////////////////////////////////////////////////////////////
+Other objectives:
+
+Combiner plusieurs distance fields pour représenter les angles aigus
+Images d'entrée antialiasée, (calculer la distance au bord de la zone sur les pixels "jonction")
+gestion du sous échantillonage => moiré lorsque le matériau est vu de loin
+mesure de qualité (autre que PSNR?) SSIM / VQM http://www.its.bldrdoc.gov/resources/video-quality-research/software.aspx / http://www2.tkn.tu-berlin.de/research/evalvid/EvalVid/vp8_versus_x264.html
+affectation des clusters via une lib externe (coin/?) cf test branch n bound
+outil d'encodage avec affichage de l'erreur, recherche auto du meilleur compromis
+gestion de la transparence
+compatibilité monocouche (fontes)
+isolation des clusters avec un algo plus "précis": accepter les dégradés
+shader avec antialiasing (contribution suivant la distance)
+ex: bande de dégradé(noir-blanc) sur fond gris=> quand la bande va passer par le gris la zone risque d'être fusionnée
+outil de démo http://jsfiddle.net/bepa/2QXkp/
+autoriser le merge de cluster de même couleur / séparation "1 ctrl point" si la couleur est la même
+support mac (=> iOS)
 
 /////////////////////////////////////////////////////////////////////////////

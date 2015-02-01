@@ -1,29 +1,17 @@
-// main.cpp : Defines the entry point for the console application.
-//
-
 #include "stdafx.h"
+
+#include "CDFLibrary.h"
 #include <assert.h>
 
 #include <iterator>
-//#include "freeimage.h"
-#include "tga.h"
+
 #include "VTCluster.hpp"
 #include "ExtractCluster.hpp"
-#include "Shrink2DBuffer.hpp"
 #include "FillArea.hpp"
-#include "DumpBuffer.hpp"
 #include "SplitColorToLayer.hpp"
 #include "ExtractLayer.hpp"
 
 
-/**
-	1°) Cluster creation (not so easy ;-)) - coherent group of pixels (high or low res ?)
-	2°) Assign Cluster to Layer & expand - minimise expand conflicts
-	- generate distance field the same time
-	- color graph probleme (edge conflict)
-	3°) Isocontour...
-	- sam
-*/
 
 void computePseudoLuminosity(uint8_t* _outC8, const uint8_t* _inRGBA8888, const int _width, const int _height)
 {
@@ -45,58 +33,86 @@ void computePseudoLuminosity(uint8_t* _outC8, const uint8_t* _inRGBA8888, const 
 }
 
 
-
-int _tmain(int argc, _TCHAR* argv[])
+void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
+				 const OutputData& _outputData, const InputData& _inputData, 
+				 const CDF_Encode_CB _callback, const uintptr_t _user)
 {
-	//testLinear();
-	//return 0;
-
-	//FreeImage_Initialise();
-	//FreeImage_DeInitialise();
-
-	//uint8_t* stepC8 = NULL;
-	uint8_t* inDataHR = NULL;
-	unsigned widthHR, heightHR;
-
-	FILE* fin;
-	char* filename = argv[1];
-	if((fin=fopen(filename, "rb"))!=NULL)
+	////
+	/// check input parameters
+	//
+	if(_outputData.m_width>_inputData.m_width || _outputData.m_height>_inputData.m_height)
 	{
-		printf("read input file...\n");
-
-		TGA_HEADER inHeader;
-		TGA_ReadHeader(&inHeader, fin);
-		inDataHR = new uint8_t[inHeader.width * inHeader.height * sizeof(uint32_t)];
-		TGA_ReadDataRGBA8(inDataHR, &inHeader, fin);
-		widthHR = inHeader.width;
-		heightHR = inHeader.height;
-		fclose(fin);
-		printf("read input file done\n");
+		_result.m_status = EncodeResult::EncodeStatus_Failed;
+		_result.m_msg = "output resolution must be smaller than input resolution; good value: x4 (in 1024x1024 => out 256x256)";
+		return;
 	}
-	else
+	unsigned widthFactor = _outputData.m_width/_inputData.m_width;
+	unsigned heightFactor = _outputData.m_height/_inputData.m_height;
+	if(_inputData.m_width * widthFactor != _outputData.m_width
+		|| _inputData.m_height * widthFactor != _outputData.m_height)
 	{
-		return 0;
+		_result.m_status = EncodeResult::EncodeStatus_Failed;
+		_result.m_msg = "output resolution must be integer factor of input resolution; good value: x4 (in 1024x1024 => out 256x256)";
+		return;
 	}
 
-	printf("save lum (c8)...\n");
+	if(_config.m_layer>CDF_MAX_LAYERS)
+	{
+		_result.m_status = EncodeResult::EncodeStatus_Failed;
+		_result.m_msg = "only \"CDF_MAX_LAYERS\" layers max supported";
+		return;
+	}
+	for(unsigned i=0; i<_config.m_layer; ++i)
+	{
+		if(_outputData.m_bufferRGBA8[i] == NULL)
+		{
+			_result.m_status = EncodeResult::EncodeStatus_Failed;
+			_result.m_msg = "invalid outputbuffer";
+			return;
+		}
+	}
+
+	unsigned widthHR = _inputData.m_width;
+	unsigned heightHR = _inputData.m_height;
+	uint8_t* inDataHR = _inputData.m_bufferRGBA8;
+
 	//uint8_t* stepLumHR = new uint8_t[widthHR * heightHR];
 	std::vector<uint8_t> stepLumHR(widthHR * heightHR);
+	printf("compute lum (c8)...\n");
 	computePseudoLuminosity(stepLumHR.data(), inDataHR, widthHR, heightHR);
-	dumpBufferUB("out-c8.tga", stepLumHR.data(), widthHR, heightHR);
-	printf("save lum (c8) done\n");
+	printf("compute lum (c8) done\n");
+	if(_callback!=NULL)
+	{
+		printf("save lum (c8)...\n");
+		EncodeEvent event;
+		event.m_event = EncodeEvent::EncodeEvent_C8;
+		_callback(event, _user);
+		//dumpBufferUB("out-c8.tga", stepLumHR.data(), widthHR, heightHR);
+		printf("save lum (c8) done\n");
+	}
 	
 	printf("compute ids...\n");
 	std::vector<ClusterId> clusterIdHR(widthHR * heightHR);
 	unsigned clusterCount = tagCluster(clusterIdHR.data(), stepLumHR.data(), widthHR, heightHR);
 	printf("compute ids done\n");
 	printf("found %d distinct ids\n", clusterCount);
-	printf("save ids...\n");
-	dumpBufferUI("out-ids.tga", clusterIdHR.data(), widthHR, heightHR);
-	printf("save ids done\n");
+	if(_callback!=NULL)
+	{
+		printf("save ids...\n");
+		EncodeEvent event;
+		event.m_event = EncodeEvent::EncodeEvent_ClusterId;
+		_callback(event, _user);
+		//dumpBufferUI("out-ids.tga", clusterIdHR.data(), widthHR, heightHR);
+		printf("save ids done\n");
+	}
 	
-	const unsigned shrinkFactor = 4;
-	unsigned widthLR = widthHR / shrinkFactor;
-	unsigned heightLR = heightHR / shrinkFactor;
+	//const unsigned shrinkFactor = 4;
+	//unsigned widthLR = widthHR / shrinkFactor;
+	//unsigned heightLR = heightHR / shrinkFactor;
+
+	unsigned widthLR = _outputData.m_width;
+	unsigned heightLR = _outputData.m_height;
+
 	//std::vector<unsigned> clusterIdLR(widthLR * heightLR);
 	//if(!shrink2DBufferUI(clusterIdLR.data(), widthLR, heightLR, clusterIdHR.data(), widthHR, heightHR))
 	//{
@@ -104,7 +120,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//	return 0;
 	//}
 
-	{
+	/*{
 		printf("save out-ref ...\n");
 		std::vector<uint8_t> inDataLR(widthLR * heightLR * 4);
 		if(!shrink2DBuffer4UB(inDataLR.data(), widthLR, heightLR, inDataHR, widthHR, heightHR))
@@ -114,14 +130,15 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 		dumpBuffer4UB("out-ref.tga", inDataLR.data(), widthLR, heightLR);
 		printf("save out-ref done\n");
-	}
+	}*/
 
 	printf("extract clusters...\n");
 	std::map<ClusterId, VTCluster> clusterGraph;
 	extractCluster(clusterGraph, widthLR, heightLR, clusterIdHR, widthHR, heightHR);
 	printf("extract clusters done\n");
 
-	unsigned layerCount = 3;
+	//unsigned layerCount = 3;
+	unsigned layerCount = _config.m_layer;
 	std::vector<std::set<ClusterId>> layers;
 	printf("extract layers...\n");
 	unsigned remainErrors = extractLayers(layers, layerCount, clusterGraph);
@@ -133,39 +150,16 @@ int _tmain(int argc, _TCHAR* argv[])
 	buffers.resize(layerCount);
 	for(unsigned i=0; i<layerCount; ++i)
 	{
-		buffers[i] = new uint8_t[widthLR * heightLR * 4];
-		memset(buffers[i], 0, widthLR * heightLR * 4);
+		//buffers[i] = new uint8_t[widthLR * heightLR * 4];
+		//memset(buffers[i], 0, widthLR * heightLR * 4);
+		buffers[i] = _outputData.m_bufferRGBA8[i];
 	}
 
 	splitBuffer(buffers, layers, 
 		widthLR, heightLR,
 		clusterIdHR, inDataHR, widthHR, heightHR);
 	printf("split colors to buffers done\n");
-		
-	printf("save %d outputs ...\n", layerCount);
-	for(unsigned i=0; i<layerCount; ++i)
-	{
-		char outfileName[_MAX_PATH];
-		sprintf(outfileName, "out-%d.tga", i);
-		dumpBuffer4UB(outfileName, buffers[i], widthLR, heightLR);
-
-		// fill holes
-		//fillHoles(buffers[i], widthLR, heightLR);
-		//sprintf(outfileName, "out-%d-filled.tga", i);
-		//dumpBuffer4UB(outfileName, buffers[i], widthLR, heightLR);
-	}
-	printf("save outputs done\n");
-
-	for(unsigned i=0; i<layerCount; ++i)
-	{
-		delete[] buffers[i];
-	}
-	buffers.clear();
-
-	//if(stepLumHR!=NULL){delete[] stepLumHR; stepLumHR=NULL;}
-	if(inDataHR!=NULL){delete[] inDataHR; inDataHR=NULL;}
-		
-	return 0;
-}
-
 	
+	_result.m_status = EncodeResult::EncodeStatus_Success;
+	_result.m_msg = NULL;
+}

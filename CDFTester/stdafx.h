@@ -5,15 +5,14 @@
 
 #pragma once
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "targetver.h"
 
 #include <stdio.h>
 #include <tchar.h>
 #include <stdint.h>
-#include <map>
-#include <vector>
-#include <set>
-#include <algorithm>
+
 
 
 // TODO: reference additional headers your program requires here

@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include <cstdlib>
+
 #include "DumpBuffer.hpp"
 #include "tga.h"
 
