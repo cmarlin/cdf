@@ -46,10 +46,10 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 		_result.m_msg = "output resolution must be smaller than input resolution; good value: x4 (in 1024x1024 => out 256x256)";
 		return;
 	}
-	unsigned widthFactor = _outputData.m_width/_inputData.m_width;
-	unsigned heightFactor = _outputData.m_height/_inputData.m_height;
-	if(_inputData.m_width * widthFactor != _outputData.m_width
-		|| _inputData.m_height * widthFactor != _outputData.m_height)
+	unsigned widthFactor = _inputData.m_width/_outputData.m_width;
+	unsigned heightFactor = _inputData.m_height/_outputData.m_height;
+	if(_outputData.m_width * widthFactor != _inputData.m_width
+		|| _outputData.m_height * heightFactor != _inputData.m_height)
 	{
 		_result.m_status = EncodeResult::EncodeStatus_Failed;
 		_result.m_msg = "output resolution must be integer factor of input resolution; good value: x4 (in 1024x1024 => out 256x256)";
@@ -67,7 +67,7 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 		if(_outputData.m_bufferRGBA8[i] == NULL)
 		{
 			_result.m_status = EncodeResult::EncodeStatus_Failed;
-			_result.m_msg = "invalid outputbuffer";
+			_result.m_msg = "invalid (null) outputbuffer";
 			return;
 		}
 	}
@@ -76,7 +76,6 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 	unsigned heightHR = _inputData.m_height;
 	uint8_t* inDataHR = _inputData.m_bufferRGBA8;
 
-	//uint8_t* stepLumHR = new uint8_t[widthHR * heightHR];
 	std::vector<uint8_t> stepLumHR(widthHR * heightHR);
 	printf("compute lum (c8)...\n");
 	computePseudoLuminosity(stepLumHR.data(), inDataHR, widthHR, heightHR);
@@ -106,10 +105,6 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 		printf("save ids done\n");
 	}
 	
-	//const unsigned shrinkFactor = 4;
-	//unsigned widthLR = widthHR / shrinkFactor;
-	//unsigned heightLR = heightHR / shrinkFactor;
-
 	unsigned widthLR = _outputData.m_width;
 	unsigned heightLR = _outputData.m_height;
 
@@ -137,12 +132,12 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 	extractCluster(clusterGraph, widthLR, heightLR, clusterIdHR, widthHR, heightHR);
 	printf("extract clusters done\n");
 
-	//unsigned layerCount = 3;
 	unsigned layerCount = _config.m_layer;
 	std::vector<std::set<ClusterId>> layers;
 	printf("extract layers...\n");
 	unsigned remainErrors = extractLayers(layers, layerCount, clusterGraph);
-	printf("remains %d errors\n", remainErrors);
+	unsigned allErrors = sumOfConflicts(clusterGraph);
+	printf("remains %d errors out of %d (%.02f%%)\n", remainErrors, allErrors, (float)remainErrors*100/allErrors);
 	printf("extract layers done\n");
 
 	printf("split colors to buffers...\n");
@@ -150,8 +145,6 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 	buffers.resize(layerCount);
 	for(unsigned i=0; i<layerCount; ++i)
 	{
-		//buffers[i] = new uint8_t[widthLR * heightLR * 4];
-		//memset(buffers[i], 0, widthLR * heightLR * 4);
 		buffers[i] = _outputData.m_bufferRGBA8[i];
 	}
 

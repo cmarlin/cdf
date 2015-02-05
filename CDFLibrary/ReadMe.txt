@@ -54,6 +54,7 @@ shader avec antialiasing (contribution suivant la distance)
 ex: bande de dégradé(noir-blanc) sur fond gris=> quand la bande va passer par le gris la zone risque d'être fusionnée
 outil de démo http://jsfiddle.net/bepa/2QXkp/
 autoriser le merge de cluster de même couleur / séparation "1 ctrl point" si la couleur est la même
-support mac (=> iOS)
+autoriser le merge de control point s'il sert de séparateur et que la valeur (distance & couleur) sont similaires
+support mac/linux (=> iOS), premake ou cmake 
 
 /////////////////////////////////////////////////////////////////////////////

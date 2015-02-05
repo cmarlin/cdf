@@ -8,5 +8,7 @@ unsigned extractLayers(std::vector<std::set<ClusterId>>& _layers,
 					const int _layerCount,
 					const std::map<ClusterId, VTCluster>& _clusterGraph);
 
+unsigned sumOfConflicts(const std::map<ClusterId, VTCluster>& _clusterGraph);
+
 
 #endif //EXTRACT_LAYER_HPP

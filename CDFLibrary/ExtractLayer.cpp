@@ -56,11 +56,11 @@ unsigned extractLayers(std::vector<std::set<ClusterId>>& _layers,
 	{
 		std::pair<ClusterId, unsigned> clusterWithFullCost;
 		clusterWithFullCost.first = it->first;
-		//clusterWithFullCost.second = it->second.SumOfCount();
-		unsigned conflictCount = it->second.SumOfCount();
-		unsigned eltCount = it->second.m_count;
-		unsigned cost = conflictCount + (conflictCount / eltCount) * SHRT_MAX;
-		clusterWithFullCost.second = cost;
+		clusterWithFullCost.second = it->second.SumOfCount();
+		//unsigned conflictCount = it->second.SumOfCount();
+		//unsigned eltCount = it->second.m_count;
+		//unsigned cost = conflictCount + (conflictCount / eltCount) * SHRT_MAX;
+		//clusterWithFullCost.second = cost;
 		clusterAndSumOfConflicts.push_back(clusterWithFullCost);
 	}
 
@@ -92,5 +92,19 @@ unsigned extractLayers(std::vector<std::set<ClusterId>>& _layers,
 		_layers[layerWithLeastConflicts].insert(clusterId);
 	}
 	return remainingConflicts;
+}
+
+unsigned sumOfConflicts(const std::map<ClusterId, VTCluster>& _clusterGraph)
+{
+	unsigned conflictsSum = 0;
+	for(std::map<ClusterId, VTCluster>::const_iterator it = _clusterGraph.begin(); it!=_clusterGraph.end(); it++)
+	{
+		std::pair<ClusterId, unsigned> clusterWithFullCost;
+		clusterWithFullCost.first = it->first;
+		//clusterWithFullCost.second = it->second.SumOfCount();
+		unsigned conflictCount = it->second.SumOfCount();
+		conflictsSum += conflictCount;
+	}
+	return conflictsSum;
 }
 
