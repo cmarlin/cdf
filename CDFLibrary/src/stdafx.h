@@ -5,15 +5,15 @@
 
 #pragma once
 
-#include "targetver.h"
-
+#include <algorithm>
+#include <assert.h>
+#include <iterator>
+#include <map>
+#include <set>
+#include <stdint.h>
 #include <stdio.h>
 #include <tchar.h>
-#include <stdint.h>
-#include <map>
 #include <vector>
-#include <set>
-#include <algorithm>
 
 
 // TODO: reference additional headers your program requires here

@@ -9,7 +9,7 @@
 #define CDF_LIBRARY_VERSION_MINOR 0
 
 //
-#define CDF_MAX_LAYERS 4
+#define CDF_MAX_LAYERS 8
 
 class EncodeEvent
 {
@@ -94,6 +94,6 @@ public:
 
 void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 				 const OutputData& _outputData, const InputData& _inputData, 
-				 const CDF_Encode_CB _callback=NULL, const uintptr_t _user=0);
+				 const CDF_Encode_CB _callback=NULL, const uintptr_t _cbUserData=0);
 
 #endif //CDF_LIBRARY_H

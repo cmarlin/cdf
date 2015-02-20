@@ -1,9 +1,6 @@
 #include "stdafx.h"
 
-#include "CDFLibrary.h"
-#include <assert.h>
-
-#include <iterator>
+#include "../CDFLibrary.h"
 
 #include "VTCluster.hpp"
 #include "ExtractCluster.hpp"
@@ -35,7 +32,7 @@ void computePseudoLuminosity(uint8_t* _outC8, const uint8_t* _inRGBA8888, const 
 
 void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 				 const OutputData& _outputData, const InputData& _inputData, 
-				 const CDF_Encode_CB _callback, const uintptr_t _user)
+				 const CDF_Encode_CB _callback, const uintptr_t _cbUserData)
 {
 	////
 	/// check input parameters
@@ -85,7 +82,7 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 		printf("save lum (c8)...\n");
 		EncodeEvent event;
 		event.m_event = EncodeEvent::EncodeEvent_C8;
-		_callback(event, _user);
+		_callback(event, _cbUserData);
 		//dumpBufferUB("out-c8.tga", stepLumHR.data(), widthHR, heightHR);
 		printf("save lum (c8) done\n");
 	}
@@ -100,7 +97,7 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 		printf("save ids...\n");
 		EncodeEvent event;
 		event.m_event = EncodeEvent::EncodeEvent_ClusterId;
-		_callback(event, _user);
+		_callback(event, _cbUserData);
 		//dumpBufferUI("out-ids.tga", clusterIdHR.data(), widthHR, heightHR);
 		printf("save ids done\n");
 	}
