@@ -21,9 +21,17 @@ void computePseudoLuminosity(uint8_t* _outC8, const uint8_t* _inRGBA8888, const 
 			// pseudo luminosity computing (R+2G+B)/4
 			int lum = (_inRGBA8888[inOffset+0] + (_inRGBA8888[inOffset+1]<<1) + _inRGBA8888[inOffset+2]) >> 2;
 			int outOffset = offset;
-			//int cluster = ((lum>>4)<<4)|(lum>>4); // keep 4 bits => 16 luminosity levels
-			int cluster = (lum>>6); // keep 2 bits => 4 luminosity levels for cluster
-			cluster = (cluster<<6) | (cluster<<4) | (cluster<<2) | cluster;
+
+			// keep 6 bits => 64 levels
+			int cluster = lum & 0xfc;
+
+			// keep 4 bits => 16 luminosity levels
+			//int cluster = ((lum>>4)<<4)|(lum>>4);
+
+			// keep 2 bits => 4 luminosity levels for cluster
+			//int cluster = (lum>>6); 
+			//cluster = (cluster<<6) | (cluster<<4) | (cluster<<2) | cluster;
+
 			_outC8[outOffset] = cluster;
 		}
 	}

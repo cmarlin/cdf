@@ -12,9 +12,9 @@
 #include "DumpBuffer.hpp"
 
 unsigned SHRINK_FACTOR = 4;
-unsigned LAYER_COUNT = 4;
+unsigned LAYER_COUNT = 3;
 
-class CDFTester
+class CDFTester	
 {
 public:
 	static void encodeEventCB(EncodeEvent _event, uintptr_t _user)
@@ -35,6 +35,8 @@ protected:
 	void handleEvent_ClusterId(const EncodeEvent& _event)
 	{
 		assert(this);
+		//sprintf(outfileName, "out-%d.tga", i);
+		//dumpBuffer4UB(outfileName, outputData.m_bufferRGBA8[i], widthLR, heightLR);
 	}
 
 	void handleEvent_C8(const EncodeEvent& _event)
