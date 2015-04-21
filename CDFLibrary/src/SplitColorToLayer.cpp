@@ -58,6 +58,7 @@ void diffuseDistances(unsigned _width, unsigned _height,
 	}	
 }
 
+
 void splitBuffer(uint8_t* _outColorsRGBA8, const unsigned _widthLR, const unsigned _heightLR,
 				 const std::set<unsigned>& _layer, 
 				 const std::vector<unsigned>& _clusterIdHR, const uint8_t* _inColorRGBA8HR, const unsigned _widthHR, const unsigned _heightHR)
@@ -105,6 +106,7 @@ void splitBuffer(uint8_t* _outColorsRGBA8, const unsigned _widthLR, const unsign
 	diffuseDistances(_widthHR, _heightHR, 
 		nearestDistance, nearestPixel);
 
+	// compute inside distance
 	std::vector<signed> nearestInsideDistance;
 	nearestInsideDistance.resize(_widthHR*_heightHR); // UINT_MAX may generate overflow
 
@@ -123,54 +125,43 @@ void splitBuffer(uint8_t* _outColorsRGBA8, const unsigned _widthLR, const unsign
 		nearestInsideDistance, trash);
 	trash.resize(0);
 
-	//unsigned dStep = std::min(widthFactor, heightFactor)/2;
-	//unsigned oStep = std::max(widthFactor, heightFactor)/2 - dStep;
-	//unsigned distanceMax =  4 * dStep + 3 * oStep;
+	// merge inside & outside distance
+	for(unsigned j=0; j<_heightHR; ++j)
+	{
+		for(unsigned i=0; i<_widthHR; i++)
+		{
+			unsigned offset = ((j * _widthHR) + i);
+			nearestInsideDistance[offset] = nearestInsideDistance[offset] > 0 ?
+				nearestInsideDistance[offset]
+				: -nearestDistance[offset];
+		}
+	}
 
-	unsigned halfTileWidthFloor = (widthFactor)/2;
-	unsigned halfTileWidthCeil = (widthFactor-1)/2;
-	unsigned halfTileHeightFloor = (heightFactor)/2;
-	unsigned halfTileHeightCeil = (heightFactor-1)/2;
+	signed dStep = std::min(widthFactor, heightFactor)/2;
+	signed oStep = std::max(widthFactor, heightFactor)/2 - dStep;
+	signed distanceMax =  4 * dStep + 3 * oStep;
+
 	for(unsigned j=0; j<_heightLR; ++j)
 	{
 		for(unsigned i=0; i<_widthLR; ++i)
 		{
 			unsigned outOffset = j*_widthLR+i;
 
-			unsigned inOffsetHRUL = (j*heightFactor+halfTileHeightFloor)*_stride+i*widthFactor+halfTileWidthFloor;
-			unsigned inOffsetHRUR = (j*heightFactor+halfTileHeightFloor)*_stride+i*widthFactor+halfTileWidthCeil;
-			unsigned inOffsetHRDL = (j*heightFactor+halfTileHeightCeil)*_stride+i*widthFactor+halfTileWidthFloor;
-			unsigned inOffsetHRDR = (j*heightFactor+halfTileHeightCeil)*_stride+i*widthFactor+halfTileWidthCeil;
+			unsigned inOffsetHR = (j*heightFactor)*_stride + i*widthFactor;
+			signed distance = (nearestInsideDistance[inOffsetHR]);
 
-			// TODO: avg could be an error, check that
-			signed distance = (nearestDistance[inOffsetHRUL] + nearestDistance[inOffsetHRUR]
-				+ nearestDistance[inOffsetHRDL] + nearestDistance[inOffsetHRDR]);
-			if(distance <= 3*2) // threshold is mid of 0-3
-			{
-				// inside
-				distance = (nearestInsideDistance[inOffsetHRUL] + nearestInsideDistance[inOffsetHRUR]
-					+ nearestInsideDistance[inOffsetHRDL] + nearestInsideDistance[inOffsetHRDR]);
-				distance = distance/4 + 2;
-			}else{
-				// outside
-				distance = -(distance/4) + 2;
-			}
+			distance += 0x2; // 0x2 : 0 is inside and 3 is outside
+			distance = ((distance) * 127 / (distanceMax)); // normalize ?
 
 			// convert to byte range
-			distance += 0x80; 
+			distance += 0x80;
 			distance = std::min(distance, 0xff);
 			distance = std::max(distance, 0x00);
 
-			unsigned pixelOffsetUL = nearestPixel[inOffsetHRUL];
-			unsigned pixelOffsetUR = nearestPixel[inOffsetHRUR];
-			unsigned pixelOffsetDL = nearestPixel[inOffsetHRDL];
-			unsigned pixelOffsetDR = nearestPixel[inOffsetHRDR];
-			_outColorsRGBA8[outOffset*4 + 0] = (_inColorRGBA8HR[pixelOffsetUL*4+0] + _inColorRGBA8HR[pixelOffsetUR*4+0]
-				+ _inColorRGBA8HR[pixelOffsetDL*4+0] + _inColorRGBA8HR[pixelOffsetDR*4+0]) / 4;
-			_outColorsRGBA8[outOffset*4 + 1] = (_inColorRGBA8HR[pixelOffsetUL*4+1] + _inColorRGBA8HR[pixelOffsetUR*4+1]
-				+ _inColorRGBA8HR[pixelOffsetDL*4+1] + _inColorRGBA8HR[pixelOffsetDR*4+1]) / 4;
-			_outColorsRGBA8[outOffset*4 + 2] = (_inColorRGBA8HR[pixelOffsetUL*4+2] + _inColorRGBA8HR[pixelOffsetUR*4+2]
-				+ _inColorRGBA8HR[pixelOffsetDL*4+2] + _inColorRGBA8HR[pixelOffsetDR*4+2]) / 4;
+			unsigned pixelOffsetHR = nearestPixel[inOffsetHR];
+			_outColorsRGBA8[outOffset*4 + 0] = _inColorRGBA8HR[pixelOffsetHR*4+0];
+			_outColorsRGBA8[outOffset*4 + 1] = _inColorRGBA8HR[pixelOffsetHR*4+1];
+			_outColorsRGBA8[outOffset*4 + 2] = _inColorRGBA8HR[pixelOffsetHR*4+2];
 
 			_outColorsRGBA8[outOffset*4 + 3] = distance;
 		}

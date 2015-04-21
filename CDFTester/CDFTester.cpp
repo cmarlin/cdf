@@ -35,13 +35,13 @@ protected:
 	void handleEvent_ClusterId(const EncodeEvent& _event)
 	{
 		assert(this);
-		//sprintf(outfileName, "out-%d.tga", i);
-		//dumpBuffer4UB(outfileName, outputData.m_bufferRGBA8[i], widthLR, heightLR);
+		//dumpBufferUI("out-ids.tga", _event.m_data, _event.m_width, _event.m_height);
 	}
 
 	void handleEvent_C8(const EncodeEvent& _event)
 	{
 		assert(this);
+		//dumpBufferUB("out-c8.tga",(uint8_t*) _event.m_data, _event.m_width, _event.m_height);
 	}
 };
 

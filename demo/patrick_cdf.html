@@ -1,4 +1,30 @@
 <!DOCTYPE html>
+<!--
+/*
+ * Copyright (C) 2009 Apple Inc. All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE INC. OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+ -->
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>WebGL Quad</title>
@@ -9,7 +35,7 @@ body, html {
   height: 100%;
   overflow: hidden;
 }
-framerate {
+#framerate {
   position: absolute;
   top: 10px;
   left: 10px;
@@ -20,30 +46,9 @@ framerate {
 #example {
   width: 100%;
   height: 100%;
-  //width: 256px
-  //height: 256px
 }
-#png_ref {
-  width: 33%;
-  //height: 100%;
-  //width: 256px
-  //height: 256px
-}
-#svg_ref {
-  width: 33%;
-  //height: 100%;
-  //width: 256px
-  //height: 256px
-}
-      section { text-align: center; margin: 50px 0; }
-      .panzoom-parent { border: 0px solid #333; }
-      .panzoom-parent .panzoom { border: 0px dashed #666; }
-      .buttons { margin: 0px 0 0; }
 
 </style>
-<script src="WebGL_Quad_files/jquery.js"></script>
-<script src="WebGL_Quad_files/jquery.panzoom.js"></script>
-<script src="WebGL_Quad_files/jquery.mousewheel.js"></script>
 <script type="text/javascript" src="WebGL_Quad_files/webgl-utils.js"></script>
 <script type="text/javascript" src="WebGL_Quad_files/webgl-debug.js"></script>
 <script src="WebGL_Quad_files/J3DI.js"> </script>
@@ -92,7 +97,7 @@ framerate {
 
     void main()
     {
-        vec2 texCoord = vec2(1.0 - v_texCoord.s, 1.0 - v_texCoord.t);
+        vec2 texCoord = vec2(v_texCoord.s, 1.0 - v_texCoord.t);
         //vec2 texCoord = vec2(v_texCoord.s, v_texCoord.t);
         vec4 color0 = texture2D(sampler2d0, texCoord);
         vec4 color1 = texture2D(sampler2d1, texCoord);
@@ -111,9 +116,10 @@ framerate {
 			gl_FragColor = vec4(color2.r, color2.g, color2.b, 1);
  		else
 			gl_FragColor = vec4(1,0,1,1);
-		*/
-			
+			*/
+		
 		// quick AA
+		
 		float aaMin = (125.0 / 255.0); //0.50 - (1.0/128.0);
 		float aaMax = (128.0 / 255.0); //0.50 + (1.0/128.0);
 		vec4 accColor = vec4(color2.rgb, 1.0);
@@ -121,37 +127,7 @@ framerate {
 		accColor = mix(accColor, vec4(color1.rgb, 1.0), weight1);
 		float weight0 = clamp((color0.w-aaMin)/(aaMax-aaMin), 0.0, 1.0);
 		gl_FragColor = mix(accColor, vec4(color0.rgb, 1.0), weight0);
-	
-		// clean AA ?
-		// dFdx()
-		// genType fwidth( 	genType p);
-		/*
-		target
-
-    Specifies a symbolic constant indicating the behavior to be controlled. GL_LINE_SMOOTH_HINT, GL_POLYGON_SMOOTH_HINT, GL_TEXTURE_COMPRESSION_HINT, and GL_FRAGMENT_SHADER_DERIVATIVE_HINT are accepted.
-mode
-
-    Specifies a symbolic constant indicating the desired behavior. GL_FASTEST, GL_NICEST, and GL_DONT_CARE are accepted. 
-	void glHint( 	GLenum target,*
-  	GLenum mode);
-	
-	example:
-	in vec2 fPosition;
-out vec4 fColor;
-
-void main() {
-    [...]
-
-    for(int row = 0; row < 2; row++) {
-        for(int col = 0; col < 2; col++) {
-            float dist = distance(fPosition, vec2(-0.50 + col, 0.50 - row));
-            float delta = fwidth(dist);
-            float alpha = smoothstep(0.45-delta, 0.45, dist);
-            fColor = mix(colors[row*2+col], fColor, alpha);
-        }
-    }
-}*/
-	
+		
 }
 </script>
 
@@ -250,7 +226,6 @@ function makePlane(ctx)
         // normals, texture coords, and indices.
         //g.box = makeBox(gl);
 		g.box = makePlane(gl);
-		g.scale = 1;
 
         // Load an image to use. Returns a WebGLTexture object
         //spiritTexture = loadImageTexture(gl, "resources/spirit.jpg");
@@ -260,7 +235,8 @@ function makePlane(ctx)
 
         // Create some matrices to use later and save their locations in the shaders
         g.mvMatrix = new J3DIMatrix4();
-		
+        //g.u_normalMatrixLoc = gl.getUniformLocation(program, "u_normalMatrix");
+        //g.normalMatrix = new J3DIMatrix4();
         g.u_modelViewProjMatrixLocCDF =
                 gl.getUniformLocation(programCDF, "u_modelViewProjMatrix");
         g.mvpMatrix = new J3DIMatrix4();
@@ -268,10 +244,14 @@ function makePlane(ctx)
         // Enable all of the vertex attribute arrays.
         gl.enableVertexAttribArray(0);
         gl.enableVertexAttribArray(1);
+        //gl.enableVertexAttribArray(2);
 
         // Set up all the vertex attributes for vertices, normals and texCoords
         gl.bindBuffer(gl.ARRAY_BUFFER, g.box.vertexObject);
         gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+        //gl.bindBuffer(gl.ARRAY_BUFFER, g.box.normalObject);
+        //gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, g.box.texCoordObject);
         gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
@@ -288,15 +268,15 @@ function makePlane(ctx)
     {
         // change the size of the canvas's backing store to match the size it is displayed.
         var canvas = document.getElementById('example');
-        //if (canvas.width == canvas.clientWidth && canvas.height == canvas.clientWidth)
-        //    return;
+        if (canvas.clientWidth == canvas.width && canvas.clientHeight == canvas.height)
+            return;
 
         canvas.width = canvas.clientWidth;
-        canvas.height = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
  
         // Set the viewport and projection matrix for the scene
-        //gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
-        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+        //gl.viewport(0, 0, canvas.width, canvas.height);
         //g.perspectiveMatrix = new J3DIMatrix4();
         //g.perspectiveMatrix.perspective(30, canvas.clientWidth / canvas.clientHeight, 1, 10000);
  		//void ortho(in float left, in float right,           // multiply the matrix by the passed ortho values on the right
@@ -305,8 +285,7 @@ function makePlane(ctx)
         //g.perspectiveMatrix.lookat(0, 0, 7, 0, 0, 0, 0, 1, 0);
 		g.orthoMatrix = new J3DIMatrix4();
 		//var screen_ratio = 10 * canvas.clientWidth / canvas.clientHeight;
-		//g.orthoMatrix.ortho(-1, 1, -1, 1, -1, 1);
-		g.orthoMatrix.ortho(-g.scale, g.scale, -g.scale, g.scale, -1, 1);
+		g.orthoMatrix.ortho(-1, 1, -1, 1, -1, 1);
     }
 
     function drawPicture(gl)
@@ -330,7 +309,7 @@ function makePlane(ctx)
 
         // Construct the model-view * projection matrix and pass it in
         //g.mvpMatrix.load(g.perspectiveMatrix);
-		g.mvpMatrix.load(g.orthoMatrix);
+		g.mvpMatrix.load(g.orhtoMatrix);
         g.mvpMatrix.multiply(g.mvMatrix);
         g.mvpMatrix.setUniform(gl, g.u_modelViewProjMatrixLocCDF, false);
 
@@ -392,22 +371,6 @@ function makePlane(ctx)
             f();
         }
     }
-	
-	function localZoomIn()
-	{
-		g.scale *= 0.9;
-	}
-	
-	function localZoomOut()
-	{
-		g.scale *= 1.1;
-	}
-	
-	function localZoomReset()
-	{
-		g.scale = 1.0;
-	}
-	
 </script>
 <style type="text/css">
     canvas {
@@ -422,61 +385,10 @@ function makePlane(ctx)
 </div>-->
 <!--<canvas height="657" width="1368" id="example">-->
 
-
-<section>
-<!--<div class="parent">
--->
-<table width="100%">
-<tr><td width="33%" height="100%">
-<div>3 texture of 256x256x32bits: 768ko Video RAM</div>
-	<!--<canvas width="100%" height="100%" />-->
-<!-- <div height="100%" width="100%" />
- --><canvas id="example" width="100%" height="100%"> <!--class="parent" -->
-<!-- <canvas style="width: inherit; height: inherit">
- --><!--   <img src="patrick_star.svg" width="100%" height="100%"/>
- -->    if you're seeing this your web browser doesn't support the &lt;canvas&gt;&gt; element. ouch!
+<canvas  id="example" style="width: inherit">
+    if you're seeing this your web browser doesn't support the &lt;canvas&gt;&gt; element. ouch!
 </canvas>
-<!-- 	<canvas style="width:100%; height:512px" />
- -->
-<!-- <img src="patrick_star-0.png" width="100%" height="100%"/>
-object-fit: fill
- -->
-<!--  <img src="patrick_star-0.png" style="width:100%; height:inherit; object-fit:fill"/>
- -->
- <!--</div>-->
-</td>
-
- <!-- style="display: inline" id="png_ref"-->
-<td width="33%" height="100%">
-<div>Single texture of 512x512x24 bits: 768ko Video RAM</div>
-<div class="panzoom">
-  <img src="patrick_star_512.png" width="100%" height="100%"/>
-</div></td>
-<td width="33%" height="100%">
-<div>SVG</div>
-<div class="panzoom" >
-  <img src="patrick_star.svg" style="width:100%"/>
-</div></td>
-</tr>
-
-      <div class="buttons">
-        <button class="zoom-in" onclick="localZoomIn()">Zoom In</button>
-        <button class="zoom-out" onclick="localZoomOut()">Zoom Out</button>
-        <input type="range" class="zoom-range">
-        <button class="reset"  onclick="localZoomReset()">Reset</button>
-      </div>
-      <script>
-        (function() {
-          var $section = $('section').first();
-          $section.find('.panzoom').panzoom({
-            $zoomIn: $section.find(".zoom-in"),
-            $zoomOut: $section.find(".zoom-out"),
-            $zoomRange: $section.find(".zoom-range"),
-            $reset: $section.find(".reset")
-          });
-        })();
-      </script>
-
+</div>
 <div id="framerate">Framerate:56fps</div>
-</section>
+
 </body></html>

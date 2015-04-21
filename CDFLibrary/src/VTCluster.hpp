@@ -6,6 +6,7 @@
 
 
 typedef unsigned ClusterId;
+const ClusterId ClusterIdInvalid = ~0;
 
 struct VTLink
 {
@@ -80,6 +81,8 @@ inline void addClusterLink(std::map<ClusterId, VTCluster>& _clusterGraph,
 		for(unsigned i=0; i<_width; ++i)
 		{
 			unsigned cluster = _from[j*_stride + i];
+			if(ClusterIdInvalid == cluster)
+				continue;
 			//if(fromSet.find(cluster)==fromSet.end())
 			//	fromSet.insert(cluster);
 			if(find(fromSet.begin(), fromSet.end(), cluster)==fromSet.end())
@@ -92,6 +95,8 @@ inline void addClusterLink(std::map<ClusterId, VTCluster>& _clusterGraph,
 		for(unsigned i=0; i<_width; ++i)
 		{
 			unsigned cluster = _to[j*_stride + i];
+			if(ClusterIdInvalid == cluster)
+				continue;
 			//if(toSet.find(cluster)==toSet.end())
 			//	toSet.insert(cluster);
 			if(find(toSet.begin(), toSet.end(), cluster)==toSet.end())

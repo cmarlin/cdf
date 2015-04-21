@@ -17,12 +17,12 @@ public:
 	enum EventEnum
 	{
 		EncodeEvent_Result = 0, // final output ? 
-		EncodeEvent_C8,
-		EncodeEvent_ClusterId,
+		EncodeEvent_C8,			// format uint8_t
+		EncodeEvent_ClusterId,	// format uint_t
 	};
 
 	EventEnum	m_event;
-	uintptr_t	m_data;
+	uintptr_t*	m_data;
 	unsigned	m_width;
 	unsigned	m_height;
 };

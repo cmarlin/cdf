@@ -38,6 +38,25 @@ void computePseudoLuminosity(uint8_t* _outC8, const uint8_t* _inRGBA8888, const 
 }
 
 
+void clearClusterTranslucent(ClusterId* _clusterIds, const uint8_t* _inRGBA8888, const int _width, const int _height)
+{
+	for(int j=0; j<_height; ++j)
+	{
+		for(int i=0; i<_width; ++i)
+		{
+			int clusterOffset = (j*_width+i);
+			int colorOffset = clusterOffset*4;
+			// pseudo luminosity computing (R+2G+B)/4
+			int alpha = _inRGBA8888[colorOffset+3];
+			if(alpha == 0)
+			{
+				_clusterIds[clusterOffset] = ClusterIdInvalid;
+			}
+		}
+	}
+}
+
+
 void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 				 const OutputData& _outputData, const InputData& _inputData, 
 				 const CDF_Encode_CB _callback, const uintptr_t _cbUserData)
@@ -90,8 +109,10 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 		printf("save lum (c8)...\n");
 		EncodeEvent event;
 		event.m_event = EncodeEvent::EncodeEvent_C8;
+		event.m_data = (uintptr_t*)stepLumHR.data();
+		event.m_width = widthHR;
+		event.m_height = heightHR;
 		_callback(event, _cbUserData);
-		//dumpBufferUB("out-c8.tga", stepLumHR.data(), widthHR, heightHR);
 		printf("save lum (c8) done\n");
 	}
 	
@@ -105,8 +126,10 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 		printf("save ids...\n");
 		EncodeEvent event;
 		event.m_event = EncodeEvent::EncodeEvent_ClusterId;
+		event.m_data = (uintptr_t*)clusterIdHR.data();
+		event.m_width = widthHR;
+		event.m_height = heightHR;
 		_callback(event, _cbUserData);
-		//dumpBufferUI("out-ids.tga", clusterIdHR.data(), widthHR, heightHR);
 		printf("save ids done\n");
 	}
 	
@@ -131,6 +154,10 @@ void EncodeCDF(EncodeResult& _result, const EncodeConfiguration& _config,
 		dumpBuffer4UB("out-ref.tga", inDataLR.data(), widthLR, heightLR);
 		printf("save out-ref done\n");
 	}*/
+
+	printf("clear translucent ids...\n");
+	clearClusterTranslucent(clusterIdHR.data(), inDataHR, widthHR, heightHR);
+	printf("clear translucent ids done\n");
 
 	printf("extract clusters...\n");
 	std::map<ClusterId, VTCluster> clusterGraph;
