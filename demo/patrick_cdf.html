@@ -122,12 +122,20 @@ body, html {
 		
 		float aaMin = (125.0 / 255.0); //0.50 - (1.0/128.0);
 		float aaMax = (128.0 / 255.0); //0.50 + (1.0/128.0);
+		/*
 		vec4 accColor = vec4(color2.rgb, 1.0);
 		float weight1 = clamp((color1.w-aaMin)/(aaMax-aaMin), 0.0, 1.0);
 		accColor = mix(accColor, vec4(color1.rgb, 1.0), weight1);
 		float weight0 = clamp((color0.w-aaMin)/(aaMax-aaMin), 0.0, 1.0);
 		gl_FragColor = mix(accColor, vec4(color0.rgb, 1.0), weight0);
-		
+		*/
+		float weight0 = clamp((color0.w-aaMin)/(aaMax-aaMin), 0.0, 1.0);
+		float weight1 = clamp((color1.w-aaMin)/(aaMax-aaMin), 0.0, 1.0);
+		float weight2 = clamp((color2.w-aaMin)/(aaMax-aaMin), 0.0, 1.0);
+		vec3 accColor = color2.rgb * weight2 + color1.rgb * weight1 + color0.rgb * weight0;
+		//accColor = mix(accColor, vec4(color1.rgb, 1.0), weight1);
+		gl_FragColor = vec4(accColor, clamp(weight0+weight1+weight2, 0.0, 1.0));
+
 }
 </script>
 
